@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CruxoWordmark } from "@/components/brand/CruxoWordmark";
@@ -160,12 +159,9 @@ export default function Home() {
                   size="compact"
                   caption="The app that argues back"
                 />
-                <Link
-                  href="/brand"
-                  className="border border-[var(--color-border-strong)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text)] transition hover:bg-[rgba(23,20,16,0.05)]"
-                >
-                  Brand Lab
-                </Link>
+                <span className="px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                  by Bhushan
+                </span>
               </div>
               <p className="mt-6 max-w-xl text-sm leading-6 text-[var(--color-text-muted)] sm:text-base">
                 Stop asking AI to confirm what you already believe. Cruxo forces
