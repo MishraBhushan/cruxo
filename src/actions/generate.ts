@@ -42,6 +42,23 @@ function parseJSON<T>(text: string): T {
   return JSON.parse(cleaned) as T;
 }
 
+const SHARED_CARD_RULES = `RULES:
+- Each argument must be specific and concrete, not generic platitudes
+- Use plain language a smart teenager would understand
+- Do NOT hedge — no "on the other hand" or "it depends"
+- Each argument should be 1-2 sentences maximum
+- Be OPINIONATED — state claims directly, not "some people think..."
+- CRITICAL: Each argument must argue ONE DIRECTION ONLY. Never include "but" or "however." Each card is ONE claim.
+- At least 1 argument must include a SECOND-ORDER EFFECT — a consequence of the consequence
+- Include at least 1 SURPRISING argument — something a smart person wouldn't immediately think of
+- If the decision involves a specific domain (insurance, legal, tax, visa), include domain-specific facts and terminology
+- When citing numbers, only use figures you are confident about. If estimating, say "roughly" or "approximately."
+
+Respond with ONLY a JSON object in this exact format, no other text:
+{"cards": [{"text": "argument text", "category": "financial"}, ...]}
+
+Valid categories: financial, emotional, practical, social, health, career, legal, other`;
+
 export async function generateCards(
   question: string
 ): Promise<ArgumentCard[]> {
@@ -55,39 +72,51 @@ export async function generateCards(
   }
 
   const start = Date.now();
-  const { text } = await generateText({
-    model: bedrock("us.amazon.nova-2-lite-v1:0"),
-    prompt: `You are generating arguments about a decision someone is wrestling with.
+
+  // Multi-agent: Advocate and Critic generate cards in parallel
+  const [advocateResult, criticResult] = await Promise.all([
+    generateText({
+      model: bedrock("us.amazon.nova-2-lite-v1:0"),
+      prompt: `You are the ADVOCATE — your job is to build the strongest possible case FOR this decision. You are fully committed to this position. No hedging, no balance, no "devil's advocate." You believe this is the right choice.
 
 DECISION: "${question}"
 
-Generate exactly 8 arguments — a mix of arguments that support this decision and arguments that challenge it.
+Generate exactly 4 arguments that make the strongest case FOR going ahead with this decision. Each argument should make the reader think "wow, I hadn't considered that" or "that's a really compelling point."
 
-RULES:
-- Each argument must be specific and concrete, not generic platitudes
-- Use plain language a smart teenager would understand
-- Do NOT hedge — no "on the other hand" or "it depends"
-- Do NOT indicate whether each argument is for or against — let the user decide
-- Each argument should be 1-2 sentences maximum
-- Cover diverse categories: financial, emotional, practical, social, career, health, legal
-- Make arguments that would genuinely matter to someone making this decision
-- Be OPINIONATED — state claims directly, not "some people think..."
-- CRITICAL: Each argument must argue ONE DIRECTION ONLY. Never include "but" or "however" in a single argument. If an argument says "you'll earn more money," it must NOT also say "but you'll face higher costs." Each card is ONE claim the user sorts as support or challenge.
-- At least 2 arguments must include a SECOND-ORDER EFFECT — a consequence of the consequence that the user probably hasn't considered
-- Include at least 1 argument about short-term impact (days/weeks) and 1 about long-term consequences (years)
-- At least 2 arguments should be SURPRISING — things a smart person wouldn't immediately think of, not the obvious pros/cons
-- If the decision involves a specific domain (insurance, legal, tax, visa), include domain-specific facts and terminology, not generic advice
-- When citing numbers or statistics, only use figures you are confident about. If estimating, say "roughly" or "approximately." Never state made-up percentages as fact.
+Cover different categories — don't put all 4 in the same bucket.
 
-Respond with ONLY a JSON object in this exact format, no other text:
-{"cards": [{"text": "argument text", "category": "financial"}, ...]}
+Do NOT label them as "for" or "against" — just state each claim as fact.
 
-Valid categories: financial, emotional, practical, social, health, career, legal, other`,
-  });
+${SHARED_CARD_RULES}`,
+    }),
+    generateText({
+      model: bedrock("us.amazon.nova-2-lite-v1:0"),
+      prompt: `You are the CRITIC — your job is to build the strongest possible case AGAINST this decision. You are fully committed to this position. No hedging, no balance, no silver linings. You believe this is a mistake.
 
-  const parsed = parseJSON<{ cards: GeneratedCard[] }>(text);
+DECISION: "${question}"
 
-  const cards = parsed.cards.map((card) => ({
+Generate exactly 4 arguments that make the strongest case AGAINST going ahead with this decision. Each argument should make the reader uncomfortable — name real risks, real costs, real consequences they're probably ignoring.
+
+Cover different categories — don't put all 4 in the same bucket.
+
+Do NOT label them as "for" or "against" — just state each claim as fact.
+
+${SHARED_CARD_RULES}`,
+    }),
+  ]);
+
+  const advocateCards = parseJSON<{ cards: GeneratedCard[] }>(advocateResult.text).cards;
+  const criticCards = parseJSON<{ cards: GeneratedCard[] }>(criticResult.text).cards;
+
+  // Interleave: advocate, critic, advocate, critic... so user sees alternating perspectives
+  const interleaved: GeneratedCard[] = [];
+  const maxLen = Math.max(advocateCards.length, criticCards.length);
+  for (let i = 0; i < maxLen; i++) {
+    if (i < advocateCards.length) interleaved.push(advocateCards[i]);
+    if (i < criticCards.length) interleaved.push(criticCards[i]);
+  }
+
+  const cards = interleaved.map((card) => ({
     id: crypto.randomUUID(),
     text: card.text,
     category: card.category,
