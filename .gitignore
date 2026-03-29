@@ -39,3 +39,4 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .tmp-audit-*.png
+scripts/test-results-*.json
