@@ -60,6 +60,9 @@ export interface SessionResult {
   blindSpot: string;
   crux: string;
   nextStep: string;
+  patternInsight: string;
+  strongestFor: string;
+  strongestAgainst: string;
 }
 
 export interface PushbackData {

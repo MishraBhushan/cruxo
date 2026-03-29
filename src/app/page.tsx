@@ -241,6 +241,28 @@ export default function Home() {
               </section>
             </div>
 
+            {/* Mobile: horizontal scroll chips */}
+            <section className="mt-4 md:hidden">
+              <p className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                Or try a sample
+              </p>
+              <div className="-mx-4 flex gap-2.5 overflow-x-auto px-4 pb-2 scrollbar-none">
+                {SAMPLE_DECISIONS.map((sample) => (
+                  <button
+                    key={sample}
+                    onClick={() => {
+                      setQuestion(sample);
+                      setError(null);
+                    }}
+                    className="shrink-0 whitespace-nowrap border border-[var(--color-border)] bg-[rgba(255,255,255,0.52)] px-3.5 py-2 text-[0.8rem] leading-5 text-[var(--color-text)] transition active:translate-y-px"
+                  >
+                    {sample}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* Desktop: full grid */}
             <section className="hidden bg-paper-panel editorial-rule mt-5 border px-5 py-5 sm:px-6 md:block">
               <div className="mb-4 flex items-end justify-between gap-4">
                 <div>
@@ -252,7 +274,7 @@ export default function Home() {
                   </p>
                 </div>
                 <p className="hidden text-[0.7rem] uppercase tracking-[0.16em] text-[var(--color-text-muted)] sm:block">
-                  Mobile-first quick starts
+                  Quick starts
                 </p>
               </div>
               <PretextCloud
