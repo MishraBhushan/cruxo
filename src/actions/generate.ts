@@ -72,10 +72,12 @@ RULES:
 - Cover diverse categories: financial, emotional, practical, social, career, health, legal
 - Make arguments that would genuinely matter to someone making this decision
 - Be OPINIONATED — state claims directly, not "some people think..."
+- CRITICAL: Each argument must argue ONE DIRECTION ONLY. Never include "but" or "however" in a single argument. If an argument says "you'll earn more money," it must NOT also say "but you'll face higher costs." Each card is ONE claim the user sorts as support or challenge.
 - At least 2 arguments must include a SECOND-ORDER EFFECT — a consequence of the consequence that the user probably hasn't considered
 - Include at least 1 argument about short-term impact (days/weeks) and 1 about long-term consequences (years)
 - At least 2 arguments should be SURPRISING — things a smart person wouldn't immediately think of, not the obvious pros/cons
 - If the decision involves a specific domain (insurance, legal, tax, visa), include domain-specific facts and terminology, not generic advice
+- When citing numbers or statistics, only use figures you are confident about. If estimating, say "roughly" or "approximately." Never state made-up percentages as fact.
 
 Respond with ONLY a JSON object in this exact format, no other text:
 {"cards": [{"text": "argument text", "category": "financial"}, ...]}
@@ -134,7 +136,7 @@ ${dominantCards.map((c) => `- "${c.text}"`).join("\n")}
 ${isSecondPushback ? "This is your SECOND pushback. Be STRONGER. They've seen one pushback already and continued their pattern." : ""}
 
 YOUR JOB:
-1. Write a pushbackMessage: ONE sentence, max 20 words. Identify the single weakest EMPIRICAL CLAIM in their dominant position and attack it specifically. Do NOT give generic "you're biased" — name the specific argument that's wrong and why.
+1. Write a pushbackMessage: ONE sentence, max 20 words. Pick the WEAKEST argument from their dominant pile above and QUOTE a few words from it. Then explain why that specific claim is wrong or overconfident. Format: "You sorted '[3-5 words from the card]' to ${dominant}, but [why it's wrong]."
 2. Generate ONE counter-argument: ONE sentence, max 25 words. This must be a SPECIFIC, FALSIFIABLE claim — something they can verify or disprove with evidence. Not a feeling, not a platitude.
 
 HARD RULE: Each field must be ONE sentence. Not two. Not a paragraph. ONE.
