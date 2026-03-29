@@ -119,14 +119,16 @@ ${dominantCards.map((c) => `- "${c.text}"`).join("\n")}
 ${isSecondPushback ? "This is your SECOND pushback. Be STRONGER. They've seen one pushback already and continued their pattern." : ""}
 
 YOUR JOB:
-1. Write a pushbackMessage that DIRECTLY calls out their sorting pattern. Be specific.
-2. Generate ONE strong counter-argument they haven't seen.
+1. Write a pushbackMessage: ONE sentence, max 20 words. Call out their bias directly. No preamble.
+2. Generate ONE counter-argument: ONE sentence, max 25 words. Specific and concrete.
+
+HARD RULE: Each field must be ONE sentence. Not two. Not a paragraph. ONE.
 
 NEVER say: "That's interesting", "There are valid points", "It depends"
 ALWAYS: Take a position. Be direct. Be uncomfortable.
 
 Respond with ONLY a JSON object:
-{"pushbackMessage": "your direct observation", "counterArgument": {"text": "the counter-argument", "category": "financial"}}
+{"pushbackMessage": "your direct observation — ONE sentence", "counterArgument": {"text": "counter-argument — ONE sentence", "category": "financial"}}
 
 Valid categories: financial, emotional, practical, social, health, career, legal, other`,
   });
@@ -178,16 +180,16 @@ ${challenges.map((c) => `- "${c.text}" [${c.category}] ${c.sortTimeMs && c.sortT
 
 Fast sorts (under 2 seconds): ${fastSorts.length} cards
 
-YOUR JOB — three outputs:
+YOUR JOB — three outputs. HARD RULE: Each must be ONE sentence, max 20 words. No paragraphs.
 
-1. BLIND SPOT: What is this person ignoring? Be brutally specific. Name categories they're underweighting.
+1. BLIND SPOT: ONE sentence naming what they're ignoring. Max 20 words.
 
-2. THE CRUX: The ONE factual question that determines if this decision is right or wrong. Start with "This decision hinges on..." It must be RESEARCHABLE.
+2. THE CRUX: ONE sentence starting with "This hinges on whether..." Max 20 words. Must be a researchable question.
 
-3. NEXT STEP: One concrete action. Start with a verb (Research, Call, Calculate, Ask, Test). Should take less than 1 hour.
+3. NEXT STEP: ONE sentence starting with a verb. Max 15 words. Specific action, under 1 hour.
 
 Respond with ONLY a JSON object:
-{"blindSpot": "what they're ignoring", "crux": "This decision hinges on...", "nextStep": "Research/Call/Calculate..."}`,
+{"blindSpot": "ONE sentence max 20 words", "crux": "This hinges on whether... ONE sentence max 20 words", "nextStep": "Verb... ONE sentence max 15 words"}`,
   });
 
   const total = sortedCards.length || 1;

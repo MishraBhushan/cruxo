@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { useDrag } from "@use-gesture/react";
+import { AutoFitText } from "@/components/AutoFitText";
 import type { ArgumentCard, CardPosition } from "@/lib/types";
 
 const SWIPE_THRESHOLD = 100;
@@ -91,9 +92,10 @@ export function SwipeCard({ card, onSwipe, isActive, showHint = false }: SwipeCa
       {...safeHandlers}
       style={{ x, rotate, touchAction: "none" }}
       className={`
-        absolute inset-x-4 top-0
-        bg-white rounded-2xl border border-gray-200 shadow-lg
-        p-6 cursor-grab active:cursor-grabbing
+        absolute inset-0
+        border border-[var(--color-border)] bg-[rgba(255,255,255,0.72)]
+        shadow-[0_20px_60px_rgba(20,17,12,0.10)]
+        p-5 sm:p-7 cursor-grab active:cursor-grabbing
         select-none
         ${isActive ? "z-10" : "z-0 pointer-events-none opacity-0"}
       `}
@@ -101,82 +103,89 @@ export function SwipeCard({ card, onSwipe, isActive, showHint = false }: SwipeCa
       animate={isActive ? { scale: 1, opacity: 1, y: 0 } : {}}
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
     >
-      {/* Category + source chips */}
-      <div className="flex items-center gap-2 mb-4">
-        <span
-          className={`px-2.5 py-1 rounded-full text-xs font-medium ${CATEGORY_COLORS[card.category] ?? CATEGORY_COLORS.other}`}
-        >
-          {card.category}
-        </span>
-        <span
-          className={`px-2.5 py-1 rounded-full text-xs font-medium ${sourceStyle}`}
-        >
-          {sourceLabel}
-        </span>
-      </div>
-
-      {/* Argument text */}
-      <p className="text-lg leading-relaxed text-gray-900 font-medium">
-        {card.text}
-      </p>
-
-      {/* Swipe labels — always visible */}
-      <div className="flex justify-between items-center mt-6 text-sm font-semibold">
-        <motion.span
-          className="text-[var(--color-challenge)] flex items-center gap-1"
-          animate={{ opacity: swiping ? undefined : 0.5 }}
-          style={swiping ? { opacity: challengeOpacity } : undefined}
-        >
-          ← Challenge
-        </motion.span>
-        <motion.span
-          className="text-[var(--color-support)] flex items-center gap-1"
-          animate={{ opacity: swiping ? undefined : 0.5 }}
-          style={swiping ? { opacity: supportOpacity } : undefined}
-        >
-          Support →
-        </motion.span>
-      </div>
-
-      {/* Swipe hint — only on first card */}
-      {showHint && isActive && (
-        <motion.div
-          className="mt-3 text-center"
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: [0, 0.7, 0], x: [0, 15, -15, 0] }}
-          transition={{ duration: 2.5, repeat: 2, ease: "easeInOut" }}
-        >
-          <span className="text-xs tracking-[0.15em] uppercase text-[var(--color-text-muted)]">
-            ← swipe to sort →
-          </span>
-        </motion.div>
-      )}
-
-      {/* Keyboard fallback buttons */}
-      {isActive && (
-        <div className="flex gap-3 mt-4 sm:hidden">
-          <button
-            onClick={() => {
-              const sortTimeMs = Date.now() - swipeStartTime.current;
-              onSwipe("challenges", sortTimeMs);
-            }}
-            className="flex-1 py-2.5 rounded-xl border-2 border-red-200 text-red-600 font-semibold text-sm hover:bg-red-50 transition-colors"
-            aria-label="Sort to challenges"
-          >
-            Challenge
-          </button>
-          <button
-            onClick={() => {
-              const sortTimeMs = Date.now() - swipeStartTime.current;
-              onSwipe("supports", sortTimeMs);
-            }}
-            className="flex-1 py-2.5 rounded-xl border-2 border-green-200 text-green-600 font-semibold text-sm hover:bg-green-50 transition-colors"
-            aria-label="Sort to supports"
-          >
-            Support
-          </button>
+      <div className="grid h-full grid-rows-[auto_minmax(0,1fr)_auto] gap-5">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={`px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] ${CATEGORY_COLORS[card.category] ?? CATEGORY_COLORS.other}`}
+            >
+              {card.category}
+            </span>
+            <span
+              className={`px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] ${sourceStyle}`}
+            >
+              {sourceLabel}
+            </span>
+          </div>
         </div>
-      )}
+
+        <div className="min-h-0 overflow-y-auto pr-1">
+          <AutoFitText
+            text={card.text}
+            minFontSize={22}
+            maxFontSize={40}
+            lineHeightRatio={1.08}
+            className="font-medium tracking-[-0.03em] text-[var(--color-text)]"
+          />
+        </div>
+
+        <div className="grid gap-4 border-t border-[var(--color-border)] pt-4">
+          <div className="flex items-center justify-between text-sm font-semibold">
+            <motion.span
+              className="flex items-center gap-1 text-[var(--color-challenge)]"
+              animate={{ opacity: swiping ? undefined : 0.56 }}
+              style={swiping ? { opacity: challengeOpacity } : undefined}
+            >
+              ← Challenge
+            </motion.span>
+            <motion.span
+              className="flex items-center gap-1 text-[var(--color-support)]"
+              animate={{ opacity: swiping ? undefined : 0.56 }}
+              style={swiping ? { opacity: supportOpacity } : undefined}
+            >
+              Support →
+            </motion.span>
+          </div>
+
+          {showHint && isActive && (
+            <motion.div
+              className="text-center"
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: [0, 0.7, 0], x: [0, 15, -15, 0] }}
+              transition={{ duration: 2.5, repeat: 2, ease: "easeInOut" }}
+            >
+              <span className="text-[0.68rem] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                Swipe or tap below
+              </span>
+            </motion.div>
+          )}
+
+          {isActive && (
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => {
+                  const sortTimeMs = Date.now() - swipeStartTime.current;
+                  onSwipe("challenges", sortTimeMs);
+                }}
+                className="min-h-12 border border-[var(--color-challenge)]/25 bg-[rgba(143,35,31,0.04)] px-4 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--color-challenge)] transition hover:bg-[rgba(143,35,31,0.08)]"
+                aria-label="Sort to challenges"
+              >
+                Challenge
+              </button>
+              <button
+                onClick={() => {
+                  const sortTimeMs = Date.now() - swipeStartTime.current;
+                  onSwipe("supports", sortTimeMs);
+                }}
+                className="min-h-12 border border-[var(--color-support)]/25 bg-[rgba(29,91,63,0.04)] px-4 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--color-support)] transition hover:bg-[rgba(29,91,63,0.08)]"
+                aria-label="Sort to supports"
+              >
+                Support
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </motion.div>
   );
 }
