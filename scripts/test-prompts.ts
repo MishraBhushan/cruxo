@@ -58,6 +58,9 @@ interface ResultsResponse {
   strongestAgainst: string;
   crux: string;
   nextStep: string;
+  premortem: string;
+  thirdOption: string;
+  doorType: "one-way" | "two-way";
 }
 
 interface PushbackResponse {
@@ -217,13 +220,19 @@ YOUR JOB — six outputs. Be specific and useful, not generic. Reference their a
 
 6. NEXT STEP (2 sentences, max 30 words): Start with a verb. Give a HYPER-SPECIFIC action: who to call, what to look up, what to calculate. Then state what the answer tells them. Not "research options" — instead "Call [specific person/office] and ask [specific question]."
 
+7. PREMORTEM (1-2 sentences, max 30 words): "It's one year from now and this decision was a disaster. The most likely reason:" Name the single most probable failure mode based on what they're ignoring. Be vivid and specific.
+
+8. THIRD OPTION (1-2 sentences, max 30 words): Instead of yes or no, what's a creative third path they haven't considered? Frame it as: "What if instead you..." This should be a genuine lateral alternative, not a compromise.
+
+9. DOOR TYPE (one word: "one-way" or "two-way"): Is this decision reversible? "one-way" = hard to undo (quitting a job, selling a house). "two-way" = easy to reverse (trying a new tool, testing a market).
+
 If confidence is low, do not pretend the user is settled. Focus on what they still need to test or verify.
 
 NEVER say: "That's interesting", "There are valid points", "It depends", "Consider both sides"
 ALWAYS: Be direct, specific, and reference their actual sorting behavior.
 
 Respond with ONLY a JSON object:
-{"patternInsight": "2-3 sentences", "blindSpot": "2 sentences", "strongestFor": "1 sentence", "strongestAgainst": "1 sentence", "crux": "2 sentences starting with This decision hinges on...", "nextStep": "2 sentences starting with a verb"}`;
+{"patternInsight": "2-3 sentences", "blindSpot": "2 sentences", "strongestFor": "1 sentence", "strongestAgainst": "1 sentence", "crux": "2-3 sentences starting with This decision hinges on...", "nextStep": "2 sentences starting with a verb", "premortem": "1-2 sentences", "thirdOption": "1-2 sentences starting with What if instead you...", "doorType": "one-way or two-way"}`;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────
@@ -412,6 +421,28 @@ function scoreResults(results: ResultsResponse, question: string): { actionabili
     specificity -= 1;
   }
 
+  // Check premortem
+  if (!results.premortem || results.premortem.split(" ").length < 8) {
+    issues.push("Premortem too thin or missing");
+    actionability -= 1;
+  }
+
+  // Check third option starts with "What if"
+  if (results.thirdOption && !results.thirdOption.toLowerCase().startsWith("what if")) {
+    issues.push(`Third option doesn't start with "What if": "${results.thirdOption?.substring(0, 40)}"`);
+    specificity -= 1;
+  }
+  if (!results.thirdOption || results.thirdOption.split(" ").length < 6) {
+    issues.push("Third option too thin or missing");
+    specificity -= 1;
+  }
+
+  // Check door type
+  if (!results.doorType || !["one-way", "two-way"].includes(results.doorType)) {
+    issues.push(`Invalid or missing door type: "${results.doorType}"`);
+    specificity -= 1;
+  }
+
   return {
     actionability: Math.max(1, actionability),
     specificity: Math.max(1, specificity),
@@ -519,13 +550,16 @@ async function main() {
       }
       console.log(`  --- Crux: "${result.results.crux}"`);
       console.log(`  --- Next Step: "${result.results.nextStep}"`);
+      console.log(`  --- Premortem: "${result.results.premortem}"`);
+      console.log(`  --- Third Option: "${result.results.thirdOption}"`);
+      console.log(`  --- Door Type: ${result.results.doorType}`);
     } catch (e) {
       console.log(`  ✗ FAILED: ${e}`);
       results.push({
         question,
         cards: [],
         pushback: null,
-        results: { patternInsight: "", blindSpot: "", strongestFor: "", strongestAgainst: "", crux: "", nextStep: "" },
+        results: { patternInsight: "", blindSpot: "", strongestFor: "", strongestAgainst: "", crux: "", nextStep: "", premortem: "", thirdOption: "", doorType: "two-way" as const },
         scores: { cardSpecificity: 0, cardDiversity: 0, pushbackSharpness: 0, resultActionability: 0, resultSpecificity: 0, overallScore: 0 },
         issues: [`Test failed: ${e}`],
         durationMs: 0,

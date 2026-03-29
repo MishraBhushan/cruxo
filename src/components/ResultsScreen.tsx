@@ -167,19 +167,65 @@ export function ResultsScreen({
         </p>
       </motion.div>
 
-      {/* Next step */}
+      {/* Premortem + Third Option side by side */}
+      <div className="grid gap-2 sm:grid-cols-2 sm:gap-3">
+        <motion.div
+          className="border border-[var(--color-challenge)]/22 bg-[rgba(143,35,31,0.04)] px-5 py-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.55 }}
+        >
+          <h3 className="mb-2 text-[0.68rem] font-bold uppercase tracking-[0.18em] text-[var(--color-challenge)]">
+            If This Fails
+          </h3>
+          <p className="text-sm leading-6 text-[var(--color-text)]">
+            {result.premortem}
+          </p>
+        </motion.div>
+
+        <motion.div
+          className="border border-[var(--color-support)]/22 bg-[rgba(29,91,63,0.04)] px-5 py-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.55 }}
+        >
+          <h3 className="mb-2 text-[0.68rem] font-bold uppercase tracking-[0.18em] text-[var(--color-support)]">
+            Third Option
+          </h3>
+          <p className="text-sm leading-6 text-[var(--color-text)]">
+            {result.thirdOption}
+          </p>
+        </motion.div>
+      </div>
+
+      {/* Next step + door type */}
       <motion.div
         className="bg-paper-panel editorial-rule border px-5 py-4"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
       >
-        <h3 className="mb-2 text-[0.68rem] font-bold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-          Do This Now
-        </h3>
-        <p className="text-sm leading-6 text-[var(--color-text)]">
-          {result.nextStep}
-        </p>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <h3 className="mb-2 text-[0.68rem] font-bold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+              Do This Now
+            </h3>
+            <p className="text-sm leading-6 text-[var(--color-text)]">
+              {result.nextStep}
+            </p>
+          </div>
+          <div className="shrink-0 text-right">
+            <p className="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+              Door type
+            </p>
+            <p className="mt-1 text-sm font-semibold text-[var(--color-text)]">
+              {result.doorType === "one-way" ? "One-way door" : "Two-way door"}
+            </p>
+            <p className="mt-0.5 text-[0.65rem] leading-4 text-[var(--color-text-muted)]">
+              {result.doorType === "one-way" ? "Hard to reverse — deliberate." : "Easy to undo — bias toward action."}
+            </p>
+          </div>
+        </div>
       </motion.div>
 
       {/* Bottom actions */}

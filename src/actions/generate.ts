@@ -27,6 +27,9 @@ interface ResultsResponse {
   patternInsight: string;
   strongestFor: string;
   strongestAgainst: string;
+  premortem: string;
+  thirdOption: string;
+  doorType: "one-way" | "two-way";
 }
 
 function parseJSON<T>(text: string): T {
@@ -224,13 +227,19 @@ YOUR JOB — six outputs. Be specific and useful, not generic. Reference their a
 
 6. NEXT STEP (2 sentences, max 30 words): Start with a verb. Give a HYPER-SPECIFIC action: who to call, what to look up, what to calculate. Then state what the answer tells them. Not "research options" — instead "Call [specific person/office] and ask [specific question]."
 
+7. PREMORTEM (1-2 sentences, max 30 words): "It's one year from now and this decision was a disaster. The most likely reason:" Name the single most probable failure mode based on what they're ignoring. Be vivid and specific.
+
+8. THIRD OPTION (1-2 sentences, max 30 words): Instead of yes or no, what's a creative third path they haven't considered? Frame it as: "What if instead you..." This should be a genuine lateral alternative, not a compromise.
+
+9. DOOR TYPE (one word: "one-way" or "two-way"): Is this decision reversible? "one-way" = hard to undo (quitting a job, selling a house). "two-way" = easy to reverse (trying a new tool, testing a market).
+
 If confidence is low, do not pretend the user is settled. Focus on what they still need to test or verify.
 
 NEVER say: "That's interesting", "There are valid points", "It depends", "Consider both sides"
 ALWAYS: Be direct, specific, and reference their actual sorting behavior.
 
 Respond with ONLY a JSON object:
-{"patternInsight": "2-3 sentences", "blindSpot": "2 sentences", "strongestFor": "1 sentence", "strongestAgainst": "1 sentence", "crux": "2 sentences starting with This decision hinges on...", "nextStep": "2 sentences starting with a verb"}`,
+{"patternInsight": "2-3 sentences", "blindSpot": "2 sentences", "strongestFor": "1 sentence", "strongestAgainst": "1 sentence", "crux": "2-3 sentences starting with This decision hinges on...", "nextStep": "2 sentences starting with a verb", "premortem": "1-2 sentences", "thirdOption": "1-2 sentences starting with What if instead you...", "doorType": "one-way or two-way"}`,
   });
 
   const total = sortedCards.length || 1;

@@ -63,6 +63,9 @@ export interface SessionResult {
   patternInsight: string;
   strongestFor: string;
   strongestAgainst: string;
+  premortem: string;
+  thirdOption: string;
+  doorType: "one-way" | "two-way";
 }
 
 export interface PushbackData {
