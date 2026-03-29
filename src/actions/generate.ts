@@ -6,6 +6,7 @@ import type { ArgumentCard, CardCategory } from "@/lib/types";
 import { getCachedCards, setCachedCards } from "@/lib/cache";
 import { assertBedrockEnv } from "@/lib/env";
 import { log } from "@/lib/logger";
+import { createSessionTrace, logGeneration, flushLangfuse } from "@/lib/langfuse";
 
 interface GeneratedCard {
   text: string;
@@ -72,6 +73,7 @@ export async function generateCards(
   }
 
   const start = Date.now();
+  const trace = createSessionTrace(question);
 
   // Multi-agent: Advocate and Critic generate cards in parallel
   const [advocateResult, criticResult] = await Promise.all([
@@ -107,6 +109,12 @@ ${SHARED_CARD_RULES}`,
 
   const advocateCards = parseJSON<{ cards: GeneratedCard[] }>(advocateResult.text).cards;
   const criticCards = parseJSON<{ cards: GeneratedCard[] }>(criticResult.text).cards;
+
+  // Log both generations to Langfuse
+  if (trace) {
+    logGeneration(trace, { name: "advocate", model: "us.amazon.nova-2-lite-v1:0", input: question, output: advocateResult.text, durationMs: Date.now() - start });
+    logGeneration(trace, { name: "critic", model: "us.amazon.nova-2-lite-v1:0", input: question, output: criticResult.text, durationMs: Date.now() - start });
+  }
 
   // Interleave: advocate, critic, advocate, critic... so user sees alternating perspectives
   const interleaved: GeneratedCard[] = [];
@@ -180,6 +188,13 @@ Valid categories: financial, emotional, practical, social, health, career, legal
   });
 
   const parsed = parseJSON<PushbackResponse>(text);
+
+  // Langfuse: log pushback generation
+  const trace = createSessionTrace(question);
+  if (trace) {
+    logGeneration(trace, { name: "pushback", model: "us.amazon.nova-2-lite-v1:0", input: question, output: text, durationMs: Date.now() - start });
+    void flushLangfuse();
+  }
 
   log({
     event: "generate_pushback",
@@ -277,6 +292,13 @@ Respond with ONLY a JSON object:
   const supportPct = Math.round((supports.length / total) * 100);
 
   const parsed = parseJSON<ResultsResponse>(text);
+
+  // Langfuse: log results generation + scores
+  const trace = createSessionTrace(question);
+  if (trace) {
+    logGeneration(trace, { name: "results", model: "us.amazon.nova-2-lite-v1:0", input: question, output: text, durationMs: Date.now() - start });
+    void flushLangfuse();
+  }
 
   log({
     event: "generate_results",
