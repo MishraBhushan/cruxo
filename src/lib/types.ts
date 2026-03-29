@@ -37,15 +37,26 @@ export type SessionPhase =
   | "results";
 
 export interface BiasAnalysis {
+  supportCount: number;
+  challengeCount: number;
+  totalSorted: number;
   leanDirection: "supports" | "challenges" | "balanced";
   leanPercentage: number;
   fastSortCount: number;
   ignoredCategories: CardCategory[];
+  confidence: "low" | "medium" | "high";
 }
 
 export interface SessionResult {
+  supportCount: number;
+  challengeCount: number;
+  totalSorted: number;
   leanPercentage: number;
   leanDirection: "supports" | "challenges" | "balanced";
+  fastSortCount: number;
+  ignoredCategories: CardCategory[];
+  confidence: "low" | "medium" | "high";
+  pushbackCount: number;
   blindSpot: string;
   crux: string;
   nextStep: string;

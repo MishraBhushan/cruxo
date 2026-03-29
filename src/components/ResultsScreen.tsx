@@ -1,25 +1,30 @@
 "use client";
 
 import { motion } from "framer-motion";
-import type { ArgumentCard, SessionResult } from "@/lib/types";
+import type { SessionResult } from "@/lib/types";
 
 interface ResultsScreenProps {
   question: string;
   result: SessionResult;
-  cards: ArgumentCard[];
   onReset: () => void;
 }
 
 export function ResultsScreen({
   question,
   result,
-  cards,
   onReset,
 }: ResultsScreenProps) {
-  const supports = cards.filter((c) => c.position === "supports");
-  const challenges = cards.filter((c) => c.position === "challenges");
-  const total = supports.length + challenges.length;
-  const supportPct = total > 0 ? Math.round((supports.length / total) * 100) : 50;
+  const supportPct = result.leanPercentage;
+  const ignoredCategoryLabel =
+    result.ignoredCategories.length > 0
+      ? result.ignoredCategories.join(", ")
+      : null;
+  const confidenceTone =
+    result.confidence === "high"
+      ? "You engaged with both sides cleanly."
+      : result.confidence === "medium"
+        ? "The pattern is useful, but not fully settled."
+        : "Treat this as a draft read, not a final verdict.";
 
   return (
     <motion.div
@@ -53,6 +58,42 @@ export function ResultsScreen({
             animate={{ width: `${supportPct}%` }}
             transition={{ duration: 1, ease: "easeOut" }}
           />
+        </div>
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-[1.2fr_0.8fr] sm:gap-3">
+        <div className="bg-paper-panel editorial-rule border px-5 py-4">
+          <p className="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+            Why Cruxo Thinks This
+          </p>
+          <p className="mt-2 text-sm leading-6 text-[var(--color-text)]">
+            {result.totalSorted} cards sorted: {result.supportCount} support,{" "}
+            {result.challengeCount} challenge.
+            {result.fastSortCount > 0
+              ? ` ${result.fastSortCount} were sorted in under 2 seconds.`
+              : " No rushed sorting detected."}
+            {ignoredCategoryLabel
+              ? ` Fast one-sided sorting showed up most in ${ignoredCategoryLabel}.`
+              : ""}
+          </p>
+        </div>
+
+        <div
+          className={`border px-5 py-4 ${
+            result.confidence === "low"
+              ? "border-[var(--color-challenge)]/22 bg-[rgba(143,35,31,0.05)]"
+              : "bg-paper-panel editorial-rule border-[var(--color-border)]"
+          }`}
+        >
+          <p className="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+            Confidence
+          </p>
+          <p className="mt-2 font-display text-[clamp(1.2rem,3vw,1.8rem)] leading-none tracking-[-0.04em] text-[var(--color-text)]">
+            {result.confidence}
+          </p>
+          <p className="mt-2 text-sm leading-6 text-[var(--color-text)]">
+            {confidenceTone}
+          </p>
         </div>
       </div>
 

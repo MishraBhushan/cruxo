@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { useDrag } from "@use-gesture/react";
 import { AutoFitText } from "@/components/AutoFitText";
@@ -27,7 +27,7 @@ interface SwipeCardProps {
 
 export function SwipeCard({ card, onSwipe, isActive, showHint = false }: SwipeCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const swipeStartTime = useRef(Date.now());
+  const swipeStartTime = useRef(0);
   const [swiping, setSwiping] = useState(false);
 
   const x = useMotionValue(0);
@@ -70,10 +70,14 @@ export function SwipeCard({ card, onSwipe, isActive, showHint = false }: SwipeCa
     { axis: "x", filterTaps: true }
   );
 
-  // Reset timer when card becomes active
-  if (isActive && swipeStartTime.current === 0) {
+  useEffect(() => {
+    if (!isActive) {
+      return;
+    }
+
     swipeStartTime.current = Date.now();
-  }
+    x.set(0);
+  }, [isActive, x]);
 
   const sourceLabel =
     card.source === "pushback" ? "Counter-argument" : "AI-generated";

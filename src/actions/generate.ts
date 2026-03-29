@@ -4,6 +4,7 @@ import { generateText } from "ai";
 import { bedrock } from "@ai-sdk/amazon-bedrock";
 import type { ArgumentCard, CardCategory } from "@/lib/types";
 import { getCachedCards, setCachedCards } from "@/lib/cache";
+import { assertBedrockEnv } from "@/lib/env";
 import { log } from "@/lib/logger";
 
 interface GeneratedCard {
@@ -38,6 +39,8 @@ function parseJSON<T>(text: string): T {
 export async function generateCards(
   question: string
 ): Promise<ArgumentCard[]> {
+  assertBedrockEnv();
+
   // Check cache first
   const cached = getCachedCards(question);
   if (cached) {
@@ -91,6 +94,8 @@ export async function generatePushback(
   sortedCards: ArgumentCard[],
   isSecondPushback: boolean
 ): Promise<{ message: string; card: ArgumentCard }> {
+  assertBedrockEnv();
+
   const start = Date.now();
   const supports = sortedCards.filter((c) => c.position === "supports");
   const challenges = sortedCards.filter((c) => c.position === "challenges");
@@ -158,8 +163,19 @@ Valid categories: financial, emotional, practical, social, health, career, legal
 
 export async function generateResults(
   question: string,
-  sortedCards: ArgumentCard[]
+  sortedCards: ArgumentCard[],
+  analysis: {
+    supportCount: number;
+    challengeCount: number;
+    leanDirection: "supports" | "challenges" | "balanced";
+    leanPercentage: number;
+    fastSortCount: number;
+    ignoredCategories: CardCategory[];
+    confidence: "low" | "medium" | "high";
+  }
 ): Promise<ResultsResponse> {
+  assertBedrockEnv();
+
   const start = Date.now();
   const supports = sortedCards.filter((c) => c.position === "supports");
   const challenges = sortedCards.filter((c) => c.position === "challenges");
@@ -180,6 +196,13 @@ ${challenges.map((c) => `- "${c.text}" [${c.category}] ${c.sortTimeMs && c.sortT
 
 Fast sorts (under 2 seconds): ${fastSorts.length} cards
 
+Interaction summary:
+- Support count: ${analysis.supportCount}
+- Challenge count: ${analysis.challengeCount}
+- Lean: ${analysis.leanDirection} (${analysis.leanPercentage}% support)
+- Confidence: ${analysis.confidence}
+${analysis.ignoredCategories.length > 0 ? `- Fast one-sided categories: ${analysis.ignoredCategories.join(", ")}` : ""}
+
 YOUR JOB — three outputs. HARD RULE: Each must be ONE sentence, max 20 words. No paragraphs.
 
 1. BLIND SPOT: ONE sentence naming what they're ignoring. Max 20 words.
@@ -187,6 +210,8 @@ YOUR JOB — three outputs. HARD RULE: Each must be ONE sentence, max 20 words. 
 2. THE CRUX: ONE sentence starting with "This hinges on whether..." Max 20 words. Must be a researchable question.
 
 3. NEXT STEP: ONE sentence starting with a verb. Max 15 words. Specific action, under 1 hour.
+
+If confidence is low, do not pretend the user is settled. Focus on what they still need to test or verify.
 
 Respond with ONLY a JSON object:
 {"blindSpot": "ONE sentence max 20 words", "crux": "This hinges on whether... ONE sentence max 20 words", "nextStep": "Verb... ONE sentence max 15 words"}`,

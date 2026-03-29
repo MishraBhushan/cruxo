@@ -70,9 +70,10 @@ export default function Home() {
         updatedCard,
       ];
 
-      // Check if we should show pushback (after card 4 and card 8)
       const sortedCount = sortedCardsRef.current.length;
-      if (shouldShowPushback(sortedCount - 1) && pushbackCount < 2) {
+      const bias = analyzeBias(sortedCardsRef.current);
+
+      if (pushbackCount < 2 && shouldShowPushback(sortedCount, bias)) {
         setPhase("pushback");
         try {
           const pb = await generatePushback(
@@ -100,11 +101,14 @@ export default function Home() {
       if (nextIndex >= updatedCards.length) {
         setPhase("generating");
         try {
-          const bias = analyzeBias(sortedCardsRef.current);
-          const res = await generateResults(question, sortedCardsRef.current);
+          const res = await generateResults(
+            question,
+            sortedCardsRef.current,
+            bias
+          );
           setResult({
-            leanPercentage: bias.leanPercentage,
-            leanDirection: bias.leanDirection,
+            ...bias,
+            pushbackCount,
             ...res,
           });
           setPhase("results");
@@ -368,7 +372,6 @@ export default function Home() {
             <ResultsScreen
               question={question}
               result={result}
-              cards={cards}
               onReset={handleReset}
             />
           </motion.div>
